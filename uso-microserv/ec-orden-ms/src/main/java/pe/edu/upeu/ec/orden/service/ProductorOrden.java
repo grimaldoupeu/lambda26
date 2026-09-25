@@ -17,6 +17,14 @@ public class ProductorOrden {
     private String topicOrdenes;
 
     public void publicarOrdenCreada(EventoOrden eventoOrden) {
+        publicar(eventoOrden);
+    }
+
+    public void publicarOrdenCancelada(EventoOrden eventoOrden) {
+        publicar(eventoOrden);
+    }
+
+    private void publicar(EventoOrden eventoOrden) {
         kafkaTemplate.send(topicOrdenes, String.valueOf(eventoOrden.getOrdenId()), eventoOrden)
                 .whenComplete((resultado, ex) -> {
                     if (ex != null) {
