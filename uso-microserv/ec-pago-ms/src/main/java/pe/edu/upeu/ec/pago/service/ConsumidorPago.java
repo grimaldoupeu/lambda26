@@ -17,10 +17,12 @@ import org.springframework.stereotype.Component;
 public class ConsumidorPago {
 
     private static final String TIPO_EVENTO_ORDEN_CREADA = "orden.creada";
+    private static final String TIPO_EVENTO_ORDEN_CANCELADA = "orden.cancelada";
     private static final String TIPO_EVENTO_PAGO_APROBADO = "pago.aprobado";
     private static final String TIPO_EVENTO_PAGO_RECHAZADO = "pago.rechazado";
     private static final String ESTADO_APROBADO = "APROBADO";
     private static final String ESTADO_RECHAZADO = "RECHAZADO";
+    private static final double LIMITE_APROBACION = 1000;
 
     private final PagoRepositorio pagoRepositorio;
     private final ProductorPago productorPago;
@@ -37,8 +39,46 @@ public class ConsumidorPago {
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void consumirEventoOrden(EventoOrden eventoOrden) {
-        if (eventoOrden == null || !TIPO_EVENTO_ORDEN_CREADA.equals(eventoOrden.getTipoEvento())) {
-            log.warn("service=ec-pago-ms component=consumer eventType={} status=ignored", eventoOrden != null ? eventoOrden.getTipoEvento() : null);
+        if (eventoOrden == null) {
+            log.warn(
+                    "service=ec-pago-ms component=consumer topic={} groupId={} status=invalid motivo=\"payload nulo, no cumple el contrato\"",
+                    topicOrdenes,
+                    groupIdPagos
+            );
+            return;
+        }
+
+        if (TIPO_EVENTO_ORDEN_CANCELADA.equals(eventoOrden.getTipoEvento())) {
+            log.info(
+                    "service=ec-pago-ms component=consumer topic={} groupId={} eventType={} ordenId={} timestamp={} status=received-not-processed motivo=\"orden cancelada, no genera pago\"",
+                    topicOrdenes,
+                    groupIdPagos,
+                    eventoOrden.getTipoEvento(),
+                    eventoOrden.getOrdenId(),
+                    eventoOrden.getTimestamp()
+            );
+            return;
+        }
+
+        if (!TIPO_EVENTO_ORDEN_CREADA.equals(eventoOrden.getTipoEvento())) {
+            log.warn(
+                    "service=ec-pago-ms component=consumer topic={} groupId={} eventType={} status=ignored motivo=\"tipoEvento no manejado por este consumer\"",
+                    topicOrdenes,
+                    groupIdPagos,
+                    eventoOrden.getTipoEvento()
+            );
+            return;
+        }
+
+        if (eventoOrden.getOrdenId() == null || eventoOrden.getTotal() == null) {
+            log.warn(
+                    "service=ec-pago-ms component=consumer topic={} groupId={} eventType={} ordenId={} total={} status=invalid motivo=\"falta un campo obligatorio del contrato\"",
+                    topicOrdenes,
+                    groupIdPagos,
+                    eventoOrden.getTipoEvento(),
+                    eventoOrden.getOrdenId(),
+                    eventoOrden.getTotal()
+            );
             return;
         }
 
@@ -56,7 +96,7 @@ public class ConsumidorPago {
                 latencyMs
         );
 
-        boolean pagoAprobado = Math.random() > 0.3;
+        boolean pagoAprobado = eventoOrden.getTotal() != null && eventoOrden.getTotal() < LIMITE_APROBACION;
         String estadoPago = pagoAprobado ? ESTADO_APROBADO : ESTADO_RECHAZADO;
         String tipoEventoPago = pagoAprobado ? TIPO_EVENTO_PAGO_APROBADO : TIPO_EVENTO_PAGO_RECHAZADO;
 
