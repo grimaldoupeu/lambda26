@@ -30,8 +30,8 @@ Resultado esperado U1: el estudiante construye un pipeline batch reproducible co
 | [S1](sesiones/S01_Arquitectura_Big_Data_Lambda_Kappa.md) | Arquitectura Big Data: arquitecturas Lambda y Kappa, batch vs. streaming. | `uso-pyspark` | Arquitectura Big Data seleccionada y justificada (Lambda o Kappa) para un caso de negocio propio. |
 | [S2](sesiones/S02_Fundamentos_PySpark_Transformaciones_Lazy_Evaluation.md) | Fundamentos PySpark: extracción, transformaciones, funciones, agrupaciones, agregaciones, RDD y evaluación perezosa (lazy evaluation). | `uso-pyspark` | Transformaciones distribuidas documentadas, con evidencia del plan de ejecución (`explain()`). |
 | [S3](sesiones/S03_Procesamiento_Calidad_Datos_Particionamiento.md) | Procesamiento distribuido y carga de datos particionada en HDFS y formatos analíticos, con validación de calidad de datos. | `uso-pyspark` | Salida analítica particionada en formato columnar, con controles de calidad (esquema, nulos, duplicados). |
-| S4 | ML distribuido con Spark MLlib (Regresión). | `uso-pyspark` | Modelo de regresión distribuida entrenado, con métricas iniciales documentadas. |
-| S5 | Integración del procesamiento batch distribuido: arquitectura, PySpark, HDFS, formatos analíticos, particionamiento y ML distribuido. | — | **Producto U1:** pipeline batch de ETL distribuido con salidas analíticas en Parquet listas para BI/ML. |
+| [S4](sesiones/S04_ML_Distribuido_Regresion_Spark_MLlib.md) | ML distribuido con Spark MLlib (Regresión). | `uso-pyspark` | Modelo de regresión distribuida entrenado, con métricas iniciales documentadas. |
+| [S5](sesiones/S05_Evaluacion_Unidad_1.md) | Integración del procesamiento batch distribuido: arquitectura, PySpark, HDFS, formatos analíticos, particionamiento y ML distribuido. | — | **Producto U1:** pipeline batch de ETL distribuido con salidas analíticas en Parquet listas para BI/ML. |
 
 ### U2: Sistema Big Data en tiempo real: ingesta, streaming, observabilidad y BI/ML
 
@@ -41,9 +41,9 @@ Resultado esperado U2: el estudiante implementa un pipeline Big Data en tiempo r
 
 | Sesión | Tema (sílabo) | Módulo `lambda26` | Trabajo principal |
 |---|---|---|---|
-| S6 | Ingesta de eventos empresariales en tiempo real. | `uso-rapido` / `uso-microserv` + `kafka` | Publicación y consumo de eventos empresariales por Kafka, con contrato de evento documentado. |
-| S7 | Ingesta de eventos IoT/sensores en tiempo real. | `uso-atmos` + `kafka` | Simulación de eventos de sensores integrada al pipeline de Kafka. |
-| S8 | Procesamiento en streaming con Spark: ventanas, watermarking y semántica de entrega. | `uso-pyspark` (consumidor) + `kafka` | Pipeline streaming con ventanas, watermarking y checkpointing. |
+| [S6](sesiones/S06_Ingesta_Eventos_Empresariales_Kafka.md) | Ingesta de eventos empresariales en tiempo real. | `uso-rapido` / `uso-microserv` + `kafka` | Publicación y consumo de eventos empresariales por Kafka, con contrato de evento documentado. |
+| [S7](sesiones/S07_Ingesta_Eventos_IoT_Sensores_Tiempo_Real.md) | Ingesta de eventos IoT/sensores en tiempo real. | `uso-atmos` + `kafka` | Simulación de eventos de sensores integrada al pipeline de Kafka. |
+| [S8](sesiones/S08_Procesamiento_Streaming_Spark_Ventanas_Watermarking.md) | Procesamiento en streaming con Spark: ventanas, watermarking y semántica de entrega. | `uso-pyspark` (consumidor) + `kafka` | Pipeline streaming con ventanas, watermarking y checkpointing. |
 | S9 | Observabilidad con Grafana y costos. | `obs` | Tablero de observabilidad con métricas, umbrales y estimación de costos. |
 | S10 | Series de tiempo e inferencia en streaming. | `uso-pyspark` | Modelo o inferencia de series de tiempo aplicado sobre datos batch y/o streaming. |
 | S11 | BI/ML distribuido con Spark: KPIs del BI y visualización de la predicción de series de tiempo. | `uso-pyspark` + `obs` | KPIs del flujo de eventos y predicción de series de tiempo visualizados en Grafana. |
@@ -132,7 +132,7 @@ flowchart LR
     Artifacts -.->|"modelo (volumen compartido)"| Scripts
 
     subgraph UseIoT["uso-atmos (fuente principal ML)"]
-        IoT["pendiente<br/>ESP32: temperatura,<br/>humedad, presión<br/>publica atmos-eventos"]
+        IoT["3 sensores ESP32 simulados<br/>temperatura, humedad, presión<br/>publica atmos-eventos (3 particiones)"]
     end
 
     subgraph UseCDC["uso-replica-cdc"]
@@ -169,7 +169,7 @@ flowchart LR
     end
 
     StreamingModule -->|"U2: streaming consumer"| Kafka
-    UseIoT -. "futuro: atmos-eventos" .-> Kafka
+    UseIoT -->|"atmos-eventos"| Kafka
     UseCDC -. "futuro: migracion CDC" .-> Kafka
     UseCDC -. "nuevo registro en el DW" .-> UseBITR
     DBT -. "Grafana consulta marts cada 1s (polling)" .-> Grafana
@@ -202,4 +202,9 @@ flowchart LR
 - [S1 - Arquitectura Big Data: Lambda y Kappa, batch vs. streaming](sesiones/S01_Arquitectura_Big_Data_Lambda_Kappa.md)
 - [S2 - Fundamentos PySpark: transformaciones, funciones, agrupaciones y evaluación perezosa](sesiones/S02_Fundamentos_PySpark_Transformaciones_Lazy_Evaluation.md)
 - [S3 - Procesamiento y Calidad de Datos: filtrado, duplicados, nulos y particionamiento analítico](sesiones/S03_Procesamiento_Calidad_Datos_Particionamiento.md)
+- [S4 - ML Distribuido con Spark MLlib (Regresión)](sesiones/S04_ML_Distribuido_Regresion_Spark_MLlib.md)
+- [S5 - Evaluación de la Unidad I](sesiones/S05_Evaluacion_Unidad_1.md)
+- [S6 - Ingesta de Eventos Empresariales en Tiempo Real](sesiones/S06_Ingesta_Eventos_Empresariales_Kafka.md)
+- [S7 - Ingesta de Eventos IoT/Sensores en Tiempo Real](sesiones/S07_Ingesta_Eventos_IoT_Sensores_Tiempo_Real.md)
+- [S8 - Procesamiento en Streaming con Spark: Ventanas, Watermarking y Semántica de Entrega](sesiones/S08_Procesamiento_Streaming_Spark_Ventanas_Watermarking.md)
 - [Guía de Proyecto Sello](proyecto-sello/index.md)

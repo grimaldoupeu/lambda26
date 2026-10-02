@@ -11,8 +11,8 @@ y las guías de sesión con sus notebooks correspondientes.
   anterior, solo como referencia histórica.
 - `docs/index.md` — página de inicio curada (propósito del curso, producto,
   arquitectura de `lambda26`, tabla de sesiones con hipervínculos).
-- `docs/sesiones/S0X_*.md` — guías de sesión. Existen **S01**, **S02** y
-  **S03**; S04 en adelante se construyen progresivamente.
+- `docs/sesiones/S0X_*.md` — guías de sesión. Existen **S01-S07, S12 y S15**;
+  el resto se construye progresivamente.
 - `mkdocs.yml` — nav con "Inicio", "Guía de Proyecto Sello", "Silabos" y las
   unidades con sus sesiones (`docs/sesiones/S0X_*.md`).
 - `pyspark/` — entorno Docker real del laboratorio (Dockerfile, `compose.yml`,

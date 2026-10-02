@@ -24,6 +24,8 @@ nav:
       - "S5 - Evaluación de la Unidad I": sesiones/S05_Evaluacion_Unidad_1.md
   - 2. Sistema Big Data en tiempo real:
       - "S6 - Ingesta de Eventos Empresariales en Tiempo Real": sesiones/S06_Ingesta_Eventos_Empresariales_Kafka.md
+      - "S7 - Ingesta de Eventos IoT/Sensores en Tiempo Real": sesiones/S07_Ingesta_Eventos_IoT_Sensores_Tiempo_Real.md
+      - "S8 - Procesamiento en Streaming con Spark": sesiones/S08_Procesamiento_Streaming_Spark_Ventanas_Watermarking.md
       - "S12 - Evaluación de la Unidad II": sesiones/S12_Evaluacion_Unidad_2.md
   - 3. Integración, DataOps y despliegue del sistema final:
       - "S15 - Evaluación de la Unidad III": sesiones/S15_Evaluacion_Unidad_3.md
