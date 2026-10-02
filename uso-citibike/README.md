@@ -17,27 +17,87 @@ docker compose -f kafka/compose.yml exec kafka /opt/kafka/bin/kafka-topics.sh --
 docker compose -f uso-citibike/compose.yml up -d --build
 ```
 
-## 3. Ejecutar (una terminal por script, en este orden)
+## 3. Ejecutar (los cuatro scripts en segundo plano, en este orden)
+
+Cada script corre dentro del contenedor con `exec -d` y escribe su propia
+bitacora en `app/logs/`. Asi no hace falta una terminal por script y queda
+evidencia en archivo para las capturas.
+
 ```powershell
-# Terminal 1 - consumer
-docker compose -f uso-citibike/compose.yml exec uso-citibike python /app/consumer_citibike.py
-# Terminal 2 - puente MQTT -> Kafka
-docker compose -f uso-citibike/compose.yml exec uso-citibike python /app/bridge_mqtt_kafka.py
-# Terminal 3 - lector del celular -> MQTT
-docker compose -f uso-citibike/compose.yml exec uso-citibike python /app/lector_phyphox_mqtt.py
-# Terminal 4 (opcional) - feed real de estaciones Citi Bike
-docker compose -f uso-citibike/compose.yml exec uso-citibike python /app/producer_gbfs.py
+# La carpeta de logs vive en el host y se ve dentro del contenedor (./app:/app)
+New-Item -ItemType Directory -Force uso-citibike\app\logs
+
+# 1. consumer (valida esquema y rango)
+docker compose -f uso-citibike/compose.yml exec -d uso-citibike sh -c "python -u /app/consumer_citibike.py > /app/logs/consumer.log 2>&1"
+# 2. puente MQTT -> Kafka
+docker compose -f uso-citibike/compose.yml exec -d uso-citibike sh -c "python -u /app/bridge_mqtt_kafka.py > /app/logs/bridge.log 2>&1"
+# 3. lector del celular -> MQTT
+docker compose -f uso-citibike/compose.yml exec -d uso-citibike sh -c "python -u /app/lector_phyphox_mqtt.py > /app/logs/lector.log 2>&1"
+# 4. feed real de estaciones Citi Bike -> Kafka
+docker compose -f uso-citibike/compose.yml exec -d uso-citibike sh -c "python -u /app/producer_gbfs.py > /app/logs/gbfs.log 2>&1"
 ```
+
+El `-u` de Python es obligatorio: sin el, la salida se queda en el buffer y el
+log aparece vacio aunque el script este corriendo bien.
+
+Comprobar que los cuatro arrancaron (las ultimas lineas de cada bitacora):
+
+```powershell
+foreach ($f in 'consumer','bridge','lector','gbfs') {
+  "===== $f.log ====="
+  docker compose -f uso-citibike/compose.yml exec uso-citibike tail -n 5 /app/logs/$f.log
+}
+```
+
+Se esperan: `published` en `lector`, `forwarded` en `bridge`, `consumed` en
+`consumer` y `published` en `gbfs`.
+
+### Ver los logs en vivo
+
+`Get-Content -Wait` es el equivalente de `tail -f` en PowerShell: deja la
+ventana abierta y va mostrando cada linea nueva a medida que llega.
+
+```powershell
+Get-Content uso-citibike\app\logs\lector.log   -Tail 15 -Wait
+Get-Content uso-citibike\app\logs\bridge.log   -Tail 15 -Wait
+Get-Content uso-citibike\app\logs\consumer.log -Tail 15 -Wait
+Get-Content uso-citibike\app\logs\gbfs.log     -Tail 15 -Wait
+```
+
+Una bitacora por ventana. Para las capturas conviene abrir cada una en su
+propia ventana, ya ubicada y con titulo propio:
+
+```powershell
+Start-Process powershell -ArgumentList '-NoExit','-Command',"Set-Location D:\bigdata\lambda26; `$Host.UI.RawUI.WindowTitle='S07 - LECTOR (celular -> MQTT)'; Get-Content uso-citibike\app\logs\lector.log -Tail 15 -Wait"
+```
+
+Para filtrar solo los casos interesantes (es una foto, no sigue en vivo):
+
+```powershell
+Select-String '"alerta"'  uso-citibike\app\logs\consumer.log
+Select-String '"invalid"' uso-citibike\app\logs\consumer.log
+```
+
+Conteo de cada resultado:
+
+```powershell
+foreach ($s in 'consumed','alerta','invalid') {
+  "$s = " + (Select-String ('"status": "' + $s + '"') uso-citibike\app\logs\consumer.log).Count
+}
+```
+
+Los logs **no se versionan** (`.gitignore` excluye `uso-citibike/app/logs/`):
+son salida de ejecucion y se regeneran en cada corrida.
 
 ## 4. Evidencias a capturar
 | # | Qué | Cómo |
 |---|---|---|
-| 1 | Sensor real | Video/foto del celular con phyphox midiendo + la terminal 3 publicando |
+| 1 | Sensor real | Video/foto del celular con phyphox midiendo + la ventana de `lector.log` publicando |
 | 2 | Kafka UI | `http://localhost:48085` → topic `citibike-eventos` → pestaña de particiones |
-| 3 | Punta a punta | Terminales 2 y 3 (`forwarded`, `published`) y 1 (`consumed`) |
+| 3 | Punta a punta | `lector.log` (`published`) -> `bridge.log` (`forwarded`) -> `consumer.log` (`consumed`) |
 | 4 | Contrato | `CONTRATO.md` |
-| 5 | Alerta real | **Sacude el celular fuerte** → en la terminal 1 aparece `status: "alerta"` |
-| extra | `invalid` | Publica texto plano al topic desde Kafka UI → `status: "invalid"` |
+| 5 | Alerta real | **Sacude el celular fuerte** → en `consumer.log` aparece `status: "alerta"` |
+| extra | `invalid` | Publica texto plano al topic MQTT (o desde Kafka UI) → `status: "invalid"` |
 
 ## Problemas comunes
 - `phyphox_unreachable`: IP equivocada, otra red wifi, o la pantalla del celular se apagó (phyphox deja de responder). Desactiva el bloqueo automático mientras pruebas.
