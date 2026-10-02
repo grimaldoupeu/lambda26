@@ -20,3 +20,6 @@ __pycache__/
 
 # SO
 .DS_Store
+
+# Logs de los scripts de uso-citibike (S07) - se generan al correr, no son material de la sesión
+uso-citibike/app/logs/

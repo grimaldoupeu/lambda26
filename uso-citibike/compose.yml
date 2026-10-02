@@ -1,0 +1,33 @@
+name: lambda26-uso-citibike
+
+# Proyecto Sello - CitiBike Intelligent Mobility (Data Geniuses)
+# S07 - Ingesta IoT con sensor REAL: acelerometro del celular (phyphox)
+# Mismo patron que uso-atmos: contenedor dormido, cada script se ejecuta a mano.
+
+services:
+  uso-citibike:
+    build: .
+    container_name: lambda26-uso-citibike
+    volumes:
+      - ./app:/app
+    working_dir: /app
+    command: sleep infinity
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_TOPIC_CITIBIKE: citibike-eventos
+      KAFKA_GROUP_ID: uso-citibike-group
+      MQTT_HOST: test.mosquitto.org
+      MQTT_PORT: "1883"
+      # Cambia equipo01 por tu identificador de equipo (igual en todos lados)
+      MQTT_TOPIC: lambda26/citibike/equipo01/vibracion
+      # Direccion que muestra phyphox en "Acceso remoto habilitado"
+      PHYPHOX_URL: http://112.138.0.105:8080
+      BIKE_ID: bici-grimaldo-01
+      READ_INTERVAL_MS: "1000"
+    networks:
+      - lambda26-kafka-net
+
+networks:
+  lambda26-kafka-net:
+    external: true
+    name: lambda26-kafka-net
