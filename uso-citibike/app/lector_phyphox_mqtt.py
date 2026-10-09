@@ -19,7 +19,7 @@ import uuid
 
 import paho.mqtt.client as mqtt
 
-PHYPHOX_URL = os.getenv("PHYPHOX_URL", "http://112.138.0.105:8080").rstrip("/")
+PHYPHOX_URL = os.getenv("PHYPHOX_URL", "http://112.138.0.106:8080").rstrip("/")
 MQTT_HOST = os.getenv("MQTT_HOST", "test.mosquitto.org")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 MQTT_TOPIC = os.getenv("MQTT_TOPIC", "lambda26/citibike/equipo01/vibracion")

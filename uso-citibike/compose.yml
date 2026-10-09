@@ -21,7 +21,7 @@ services:
       # Cambia equipo01 por tu identificador de equipo (igual en todos lados)
       MQTT_TOPIC: lambda26/citibike/equipo01/vibracion
       # Direccion que muestra phyphox en "Acceso remoto habilitado"
-      PHYPHOX_URL: http://112.138.0.105:8080
+      PHYPHOX_URL: http://112.138.0.106:8080
       BIKE_ID: bici-grimaldo-01
       READ_INTERVAL_MS: "1000"
     networks:

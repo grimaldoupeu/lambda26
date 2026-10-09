@@ -48,8 +48,10 @@ while True:
         continue
 
     estaciones = feed.get("data", {}).get("stations", [])
-    if estaciones_fijas is None:  # se fijan las primeras N para seguirlas en el tiempo
-        estaciones_fijas = [e["station_id"] for e in estaciones[:NUM_ESTACIONES]]
+    if estaciones_fijas is None:  # se fijan las primeras N en servicio para seguirlas en el tiempo
+        # S08: el feed lista primero estaciones dadas de baja (is_installed=0, siempre 0 bicis y 0 docks)
+        en_servicio = [e for e in estaciones if e.get("is_installed") == 1 and e.get("is_renting") == 1]
+        estaciones_fijas = [e["station_id"] for e in en_servicio[:NUM_ESTACIONES]]
     por_id = {e.get("station_id"): e for e in estaciones}
 
     for station_id in estaciones_fijas:

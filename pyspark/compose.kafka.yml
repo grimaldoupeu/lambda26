@@ -1,0 +1,14 @@
+# Override de la Unidad 2 (S6+): une el contenedor de PySpark a la red de Kafka
+# para que Spark resuelva kafka:9092. Se usa junto a compose.yml:
+#   docker compose -f pyspark/compose.yml -f pyspark/compose.kafka.yml up -d
+
+services:
+  pyspark:
+    networks:
+      - default
+      - lambda26-kafka-net
+
+networks:
+  lambda26-kafka-net:
+    external: true
+    name: lambda26-kafka-net
